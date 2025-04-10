@@ -4,7 +4,7 @@
   "main": "dist/main.js",
   "scripts": {
     "start": "npm run build && electron .",
-    "build": "rm -rf dist && mkdir dist && tsc && cp index.html dist/",
+    "build": "rm -rf dist && mkdir dist && tsc -p tsconfig.json && tsc -p tsconfig.preload.json && cp index.html dist/ && cp -r src/shaders dist/src/",
     "watch": "tsc -w"
   },
   "keywords": [],
@@ -15,6 +15,9 @@
     "@types/node": "^22.14.0",
     "electron": "^35.1.5",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@types/electron": "^1.6.10"
   },
   "type": "module"
 }

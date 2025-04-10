@@ -13,7 +13,9 @@ function initWebGL(canvas: HTMLCanvasElement) {
   const gl =
     canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
   if (!gl) {
-    console.error("Unable to initialize WebGL. Your browser may not support it.");
+    console.error(
+      "Unable to initialize WebGL. Your browser may not support it.",
+    );
     return null;
   }
   console.log("WebGL context initialized successfully");
@@ -41,7 +43,9 @@ function compileShader(
     gl.deleteShader(shader);
     return null;
   }
-  console.log(`Shader compiled successfully: ${type === gl.VERTEX_SHADER ? 'vertex' : 'fragment'}`);
+  console.log(
+    `Shader compiled successfully: ${type === gl.VERTEX_SHADER ? "vertex" : "fragment"}`,
+  );
   return shader;
 }
 
@@ -111,10 +115,20 @@ function start(video: HTMLVideoElement) {
 
   // Get uniform locations
   const timeUniformLocation = gl.getUniformLocation(shaderProgram, "iTime");
-  const resolutionUniformLocation = gl.getUniformLocation(shaderProgram, "iResolution");
-  const textureUniformLocation = gl.getUniformLocation(shaderProgram, "iChannel0");
+  const resolutionUniformLocation = gl.getUniformLocation(
+    shaderProgram,
+    "iResolution",
+  );
+  const textureUniformLocation = gl.getUniformLocation(
+    shaderProgram,
+    "iChannel0",
+  );
 
-  if (!timeUniformLocation || !resolutionUniformLocation || !textureUniformLocation) {
+  if (
+    !timeUniformLocation ||
+    !resolutionUniformLocation ||
+    !textureUniformLocation
+  ) {
     console.error("Could not find one or more uniform locations");
     console.log("Time uniform location:", timeUniformLocation);
     console.log("Resolution uniform location:", resolutionUniformLocation);
@@ -160,7 +174,7 @@ window.onload = async () => {
     if (!window.electronAPI) {
       throw new Error("electronAPI not available");
     }
-    
+
     const sourceId = await window.electronAPI.getScreenSource();
     console.log("Screen source obtained:", sourceId);
 
@@ -168,14 +182,14 @@ window.onload = async () => {
       audio: false,
       video: {
         mandatory: {
-          chromeMediaSource: 'desktop',
+          chromeMediaSource: "desktop",
           chromeMediaSourceId: sourceId,
           minWidth: 1280,
           minHeight: 720,
           maxWidth: 4000,
           maxHeight: 4000,
-        }
-      }
+        },
+      },
     });
 
     console.log("Screen capture stream obtained");

@@ -1,7 +1,7 @@
 export const vertexShaderSource = `
     attribute vec2 aVertexPosition;
     void main(void) {
-      gl_Position = vec4(aVertexPosition, 0.0, 1.0)
+      gl_Position = vec4(aVertexPosition, 0.0, 1.0);
     }
 `;
 
@@ -62,4 +62,10 @@ export const fragmentShaderSource = `
       vec2 uv = fragCoord / iResolution.xy;
       fragColor = effect(iResolution.xy, uv * iResolution.xy);
   }
+
+  void main() {
+        vec4 color;
+        mainImage(color, gl_FragCoord.xy);
+        gl_FragColor = color;
+    }
 `;

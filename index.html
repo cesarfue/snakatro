@@ -3,9 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Electron Shader</title>
+    <title>Shader in Electron</title>
   </head>
   <body>
-    <script src="dist/renderer.js"></script>
+    <canvas id="glCanvas" width="800" height="600"></canvas>
+    <script type="module" src="src/renderer.ts"></script>
   </body>
 </html>

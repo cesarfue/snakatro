@@ -1,4 +1,4 @@
-import { vertexShaderSource, fragmentShaderSource } from "./shaders.js";
+import { vertexShaderSource, fragmentShaderSource } from "./shaders.ts";
 
 function initWebGL(canvas) {
   const gl =
@@ -69,10 +69,26 @@ function start() {
 
   gl.vertexAttribPointer(vertexPosition, 2, gl.FLOAT, false, 0, 0);
 
+  const timeUniformLocation = gl.getUniformLocation(shaderProgram, "iTime");
+  const resolutionUniformLocation = gl.getUniformLocation(
+    shaderProgram,
+    "iResolution",
+  );
+
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  function render() {
+    const time = performance.now() / 1000; // time in seconds
+    gl.uniform1f(timeUniformLocation, time);
+    gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    requestAnimationFrame(render);
+  }
+
+  render();
 }
 
 window.onload = start;

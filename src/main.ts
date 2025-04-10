@@ -12,9 +12,8 @@ function createWindow(): void {
     },
   });
 
-  mainWindow.loadFile("index.html");
-  mainWindow.setBackgroundColor("#ffffff");
   mainWindow.loadFile(path.join(__dirname, "index.html"));
+  mainWindow.setBackgroundColor("#ffffff");
 
   mainWindow.on("closed", () => {
     mainWindow = null;

@@ -1,19 +1,30 @@
-const balatro_shader = {
+export const vertexShaderSource = `
+    attribute vec2 aVertexPosition;
+    void main(void) {
+      gl_Position = vec4(aVertexPosition, 0.0, 1.0)
+    }
+`;
 
-#define SPIN_ROTATION -2.0
-#define SPIN_SPEED 7.0
-#define OFFSET vec2(0.0)
-#define COLOUR_1 vec4(0.871, 0.267, 0.231, 1.0)
-#define COLOUR_2 vec4(0.0, 0.42, 0.706, 1.0)
-#define COLOUR_3 vec4(0.086, 0.137, 0.145, 1.0)
-#define CONTRAST 3.5
-#define LIGTHING 0.4
-#define SPIN_AMOUNT 0.25
-#define PIXEL_FILTER 745.0
-#define SPIN_EASE 1.0
-#define PI 3.14159265359
-#define IS_ROTATE false
-
+export const fragmentShaderSource = `
+  precision mediump float;
+  
+  #define SPIN_ROTATION -2.0
+  #define SPIN_SPEED 7.0
+  #define OFFSET vec2(0.0)
+  #define COLOUR_1 vec4(0.871, 0.267, 0.231, 1.0)
+  #define COLOUR_2 vec4(0.0, 0.42, 0.706, 1.0)
+  #define COLOUR_3 vec4(0.086, 0.137, 0.145, 1.0)
+  #define CONTRAST 3.5
+  #define LIGTHING 0.4
+  #define SPIN_AMOUNT 0.25
+  #define PIXEL_FILTER 745.0
+  #define SPIN_EASE 1.0
+  #define PI 3.14159265359
+  #define IS_ROTATE false
+  
+  uniform float iTime;
+  uniform vec2 iResolution;
+  
   vec4 effect(vec2 screenSize, vec2 screen_coords) {
       float pixel_size = length(screenSize.xy) / PIXEL_FILTER;
       vec2 uv = (floor(screen_coords.xy*(1./pixel_size))*pixel_size - 0.5*screenSize.xy)/length(screenSize.xy) - OFFSET;
@@ -48,9 +59,7 @@ const balatro_shader = {
   }
 
   void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-      vec2 uv = fragCoord/iResolution.xy;
-      
+      vec2 uv = fragCoord / iResolution.xy;
       fragColor = effect(iResolution.xy, uv * iResolution.xy);
   }
-
-}
+`;

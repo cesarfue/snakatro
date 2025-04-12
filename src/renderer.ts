@@ -1,4 +1,4 @@
-import { vertexShaderSource, fragmentShaderSource } from "./shaders/snake.js";
+import { vertexShaderSource, fragmentShaderSource } from "./shaders/snake";
 
 // Define the type for the electronAPI
 declare global {

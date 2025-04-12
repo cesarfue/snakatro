@@ -12,37 +12,70 @@ window.snakePosition = { x: 100, y: 100 };
 
 const Snake: React.FC = () => {
   const [position, setPosition] = useState({ x: 100, y: 100 });
-  const [speed] = useState(20);
+  const [direction, setDirection] = useState({ x: 0, y: 0 });
+  const speed = 200;
+
+  const directionRef = React.useRef(direction);
+  const positionRef = React.useRef(position);
+
+  useEffect(() => {
+    directionRef.current = direction;
+  }, [direction]);
+
+  useEffect(() => {
+    positionRef.current = position;
+  }, [position]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       event.preventDefault();
-      setPosition((prev) => {
-        const newPos = { ...prev };
-
-        switch (event.key) {
-          case "ArrowUp":
-            newPos.y = Math.max(25, prev.y - speed); // Prevent going off the top
-            break;
-          case "ArrowDown":
-            newPos.y = Math.min(window.innerHeight - 25, prev.y + speed); // Prevent going off the bottom
-            break;
-          case "ArrowLeft":
-            newPos.x = Math.max(25, prev.x - speed); // Prevent going off the left
-            break;
-          case "ArrowRight":
-            newPos.x = Math.min(window.innerWidth - 25, prev.x + speed); // Prevent going off the right
-            break;
-        }
-
-        window.snakePosition = newPos;
-        return newPos;
-      });
+      switch (event.key) {
+        case "ArrowUp":
+          setDirection({ x: 0, y: -1 });
+          break;
+        case "ArrowDown":
+          setDirection({ x: 0, y: 1 });
+          break;
+        case "ArrowLeft":
+          setDirection({ x: -1, y: 0 });
+          break;
+        case "ArrowRight":
+          setDirection({ x: 1, y: 0 });
+          break;
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
+  }, []);
+
+  useEffect(() => {
+    let lastTime = performance.now();
+
+    const tick = (now: number) => {
+      const deltaTime = (now - lastTime) / 1000; // in seconds
+      lastTime = now;
+
+      const dir = directionRef.current;
+      if (dir.x !== 0 || dir.y !== 0) {
+        setPosition((prev) => {
+          let newX = prev.x + dir.x * speed * deltaTime;
+          let newY = prev.y + dir.y * speed * deltaTime;
+
+          newX = Math.min(Math.max(newX, 25), window.innerWidth - 25);
+          newY = Math.min(Math.max(newY, 25), window.innerHeight - 25);
+
+          const newPos = { x: newX, y: newY };
+          window.snakePosition = newPos;
+          return newPos;
+        });
+      }
+      requestAnimationFrame(tick);
+    };
+
+    const animationId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animationId);
   }, [speed]);
 
   return (
@@ -53,16 +86,16 @@ const Snake: React.FC = () => {
         height: "20px",
         borderRadius: "50%",
         backgroundColor: "rgba(255, 0, 0, 0.7)",
-        left: `${position.x - 25}px`, // Center the circle on its position
+        left: `${position.x - 25}px`,
         top: `${position.y - 25}px`,
         pointerEvents: "auto",
-        transition: "left 0.1s, top 0.1s",
+        transition: "none",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         userSelect: "none",
       }}
-    ></div>
+    />
   );
 };
 

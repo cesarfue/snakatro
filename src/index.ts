@@ -19,6 +19,7 @@ async function getScreenSource() {
       types: ["window"],
       thumbnailSize: { width: 0, height: 0 }, // Don't need thumbnails
     });
+    console.log(`scree sources are : ${sources}`);
     const previousWindow = sources[1]; // Skip our own window (index 0)
     if (!previousWindow) {
       throw new Error("No previous window found");
@@ -38,7 +39,7 @@ function createWindow(): void {
     height: height,
     transparent: true,
     frame: false,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
     resizable: false,
     hasShadow: false,
     fullscreenable: false,

@@ -2,6 +2,14 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { useState, useEffect } from "react";
 
+declare global {
+  interface Window {
+    snakePosition: { x: number; y: number };
+  }
+}
+
+window.snakePosition = { x: 100, y: 100 };
+
 const Snake: React.FC = () => {
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [speed] = useState(20);
@@ -27,6 +35,7 @@ const Snake: React.FC = () => {
             break;
         }
 
+        window.snakePosition = newPos;
         return newPos;
       });
     };

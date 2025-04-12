@@ -95,8 +95,13 @@ function start(video: HTMLVideoElement) {
   const gl = initWebGL(canvas);
   if (!gl) return;
 
-  const shaderProgram = initShaderProgram(gl)!;
+  const shaderProgram = initShaderProgram(gl);
   gl.useProgram(shaderProgram);
+
+  if (!(shaderProgram instanceof WebGLProgram)) {
+    console.error("Shader program is not a valid WebGLProgram");
+    return;
+  }
 
   const vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
   if (vertexPosition === -1) {
@@ -125,6 +130,14 @@ function start(video: HTMLVideoElement) {
     "iChannel0",
   );
 
+  const snakePositionUniformLocation = gl.getUniformLocation(
+    shaderProgram,
+    "iSnakePosition",
+  );
+
+  if (!snakePositionUniformLocation) {
+    console.error("Could not find snake position uniform location");
+  }
   if (
     !timeUniformLocation ||
     !resolutionUniformLocation ||
@@ -156,6 +169,13 @@ function start(video: HTMLVideoElement) {
     gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
     gl.uniform1i(textureUniformLocation, 0);
 
+    if (window.snakePosition && snakePositionUniformLocation) {
+      gl.uniform2f(
+        snakePositionUniformLocation,
+        window.snakePosition.x * window.devicePixelRatio,
+        window.snakePosition.y * window.devicePixelRatio, // Flip Y coordinate for WebGL
+      );
+    }
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     requestAnimationFrame(render);
   }

@@ -31,16 +31,17 @@ async function getScreenSource() {
 }
 
 function createWindow(): void {
-  // Get screen dimensions from primary display
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
-  // Create the browser window.
   mainWindow = new BrowserWindow({
     width: width,
     height: height,
-    resizable: true,
-    transparent: false,
+    transparent: true,
     frame: false,
+    alwaysOnTop: true,
+    resizable: false,
+    hasShadow: false,
+    fullscreenable: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -48,11 +49,12 @@ function createWindow(): void {
     },
   });
 
-  // Load the entry point from Webpack
+  mainWindow.setIgnoreMouseEvents(true);
+  mainWindow.setFocusable(false);
+
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  // Uncomment to enable DevTools
-  // mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 
   mainWindow.on("closed", () => {
     mainWindow = null;

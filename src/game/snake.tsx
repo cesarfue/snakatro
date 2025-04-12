@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT" | "NONE";
 type Position = { x: number; y: number };
@@ -25,13 +25,40 @@ export const Snake: React.FC = () => {
   ];
   const [segments, setSegments] = useState<Position[]>(initialSegments);
   const [direction, setDirection] = useState<Direction>("NONE");
+  const [renderSegments, setRenderSegments] =
+    useState<Position[]>(initialSegments);
+
+  const previousSegments = useRef<Position[]>(initialSegments);
+  const lastUpdateTime = useRef<number>(performance.now());
 
   useEffect(() => {
-    window.snakePosition = {
-      x: segments[0].x * GRID_SIZE + GRID_SIZE / 2,
-      y: segments[0].y * GRID_SIZE + GRID_SIZE / 2,
+    let animationFrameId: number;
+
+    const animate = (time: number) => {
+      const delta = time - lastUpdateTime.current;
+      const t = Math.min(delta / MOVE_INTERVAL, 1); // progress between 0 and 1
+
+      const interpolated = segments.map((seg, i) => {
+        const prev = previousSegments.current[i] || seg;
+        return {
+          x: prev.x + (seg.x - prev.x) * t,
+          y: prev.y + (seg.y - prev.y) * t,
+        };
+      });
+
+      setRenderSegments(interpolated);
+      window.snakePosition = {
+        x: interpolated[0].x * GRID_SIZE + GRID_SIZE / 2,
+        y: interpolated[0].y * GRID_SIZE + GRID_SIZE / 2,
+      };
+      console.log(window.snakePosition);
+
+      animationFrameId = requestAnimationFrame(animate);
     };
-  }, [direction, segments, GRID_SIZE]);
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [segments]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -71,6 +98,8 @@ export const Snake: React.FC = () => {
   useEffect(() => {
     const moveSnake = () => {
       setSegments((prevSegments) => {
+        previousSegments.current = prevSegments;
+        lastUpdateTime.current = performance.now();
         const head = prevSegments[0];
         let newHead: Position;
 
@@ -92,10 +121,13 @@ export const Snake: React.FC = () => {
             break;
         }
 
-        if (newHead.x < 0) newHead.x = GRID_WIDTH - 1;
-        if (newHead.x >= GRID_WIDTH) newHead.x = 0;
-        if (newHead.y < 0) newHead.y = GRID_HEIGHT - 1;
-        if (newHead.y >= GRID_HEIGHT) newHead.y = 0;
+        if (
+          newHead.x < 0 ||
+          newHead.x >= GRID_WIDTH ||
+          newHead.y < 0 ||
+          newHead.y >= GRID_HEIGHT
+        )
+          return prevSegments;
 
         const newSegments = [
           newHead,
@@ -111,7 +143,7 @@ export const Snake: React.FC = () => {
 
   return (
     <>
-      {segments.map((segment, index) => (
+      {renderSegments.map((segment, index) => (
         <div
           key={index}
           style={{
@@ -123,8 +155,8 @@ export const Snake: React.FC = () => {
             left: `${segment.x * GRID_SIZE}px`,
             top: `${segment.y * GRID_SIZE}px`,
             pointerEvents: "auto",
-            transition: "none",
             userSelect: "none",
+            //transition: "top 150ms linear, left 150ms linear",
           }}
         />
       ))}

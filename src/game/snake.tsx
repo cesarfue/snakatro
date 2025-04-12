@@ -13,10 +13,8 @@ declare global {
 export const Snake: React.FC = () => {
   const GRID_SIZE = 20;
   const MOVE_INTERVAL = 150;
-
   const GRID_WIDTH = Math.floor(window.innerWidth / GRID_SIZE);
   const GRID_HEIGHT = Math.floor(window.innerHeight / GRID_SIZE);
-
   const initialX = Math.floor(GRID_WIDTH / 2);
   const initialY = Math.floor(GRID_HEIGHT / 2);
 
@@ -24,14 +22,8 @@ export const Snake: React.FC = () => {
     { x: initialX, y: initialY },
   ]);
   const [direction, setDirection] = useState<Direction>("NONE");
-  const [lastDirection, setLastDirection] = useState<Direction>("NONE");
-
-  const directionRef = React.useRef<Direction>(direction);
-  const lastDirectionRef = React.useRef<Direction>(lastDirection);
-  const segmentsRef = React.useRef<Position[]>(segments);
 
   useEffect(() => {
-    directionRef.current = direction;
     window.snakePosition = {
       x: segments[0].x * GRID_SIZE + GRID_SIZE / 2,
       y: segments[0].y * GRID_SIZE + GRID_SIZE / 2,
@@ -39,41 +31,32 @@ export const Snake: React.FC = () => {
   }, [direction, segments, GRID_SIZE]);
 
   useEffect(() => {
-    lastDirectionRef.current = lastDirection;
-  }, [lastDirection]);
-
-  useEffect(() => {
-    segmentsRef.current = segments;
-  }, [segments]);
-
-  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      event.preventDefault();
-
-      const currentDirection = directionRef.current;
-
-      switch (event.key) {
-        case "ArrowUp":
-          if (lastDirectionRef.current !== "DOWN") {
-            setDirection("UP");
-          }
-          break;
-        case "ArrowDown":
-          if (lastDirectionRef.current !== "UP") {
-            setDirection("DOWN");
-          }
-          break;
-        case "ArrowLeft":
-          if (lastDirectionRef.current !== "RIGHT") {
-            setDirection("LEFT");
-          }
-          break;
-        case "ArrowRight":
-          if (lastDirectionRef.current !== "LEFT") {
-            setDirection("RIGHT");
-          }
-          break;
-      }
+      setDirection((direction) => {
+        switch (event.key) {
+          case "ArrowUp":
+            if (direction !== "DOWN") {
+              return "UP";
+            }
+            break;
+          case "ArrowDown":
+            if (direction !== "UP") {
+              return "DOWN";
+            }
+            break;
+          case "ArrowLeft":
+            if (direction !== "RIGHT") {
+              return "LEFT";
+            }
+            break;
+          case "ArrowRight":
+            if (direction !== "LEFT") {
+              return "RIGHT";
+            }
+            break;
+        }
+        return direction;
+      });
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -84,19 +67,11 @@ export const Snake: React.FC = () => {
 
   useEffect(() => {
     const moveSnake = () => {
-      const currentDirection = directionRef.current;
-
-      if (currentDirection === "NONE") {
-        return;
-      }
-
-      setLastDirection(currentDirection);
-
       setSegments((prevSegments) => {
         const head = prevSegments[0];
         let newHead: Position;
 
-        switch (currentDirection) {
+        switch (direction) {
           case "UP":
             newHead = { x: head.x, y: head.y - 1 };
             break;
@@ -125,7 +100,7 @@ export const Snake: React.FC = () => {
 
     const gameInterval = setInterval(moveSnake, MOVE_INTERVAL);
     return () => clearInterval(gameInterval);
-  }, [GRID_HEIGHT, GRID_WIDTH]);
+  }, [GRID_HEIGHT, GRID_WIDTH, direction]);
 
   return (
     <>

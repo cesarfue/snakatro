@@ -1,4 +1,5 @@
 import { vertexShaderSource, fragmentShaderSource } from "./shaders/snake";
+import { initGame } from "./game";
 
 // Define the type for the electronAPI
 declare global {
@@ -198,6 +199,7 @@ window.onload = async () => {
       console.log("Video metadata loaded, starting playback");
       video.play();
       start(video);
+      initGame();
     };
   } catch (err) {
     console.error("Failed to get screen stream", err);

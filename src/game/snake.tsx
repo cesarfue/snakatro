@@ -1,5 +1,4 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 import { useState, useEffect } from "react";
 
 declare global {
@@ -8,10 +7,10 @@ declare global {
   }
 }
 
-window.snakePosition = { x: 100, y: 100 };
+window.snakePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
-const Snake: React.FC = () => {
-  const [position, setPosition] = useState({ x: 100, y: 100 });
+export const Snake: React.FC = () => {
+  const [position, setPosition] = useState(window.snakePosition);
   const [direction, setDirection] = useState({ x: 0, y: 0 });
   const speed = 200;
 
@@ -54,7 +53,7 @@ const Snake: React.FC = () => {
     let lastTime = performance.now();
 
     const tick = (now: number) => {
-      const deltaTime = (now - lastTime) / 1000; // in seconds
+      const deltaTime = (now - lastTime) / 1000;
       lastTime = now;
 
       const dir = directionRef.current;
@@ -86,8 +85,8 @@ const Snake: React.FC = () => {
         height: "20px",
         borderRadius: "50%",
         backgroundColor: "rgba(255, 0, 0, 0.7)",
-        left: `${position.x - 25}px`,
-        top: `${position.y - 25}px`,
+        left: `${position.x - 10}px`,
+        top: `${position.y - 10}px`,
         pointerEvents: "auto",
         transition: "none",
         display: "flex",
@@ -98,30 +97,3 @@ const Snake: React.FC = () => {
     />
   );
 };
-
-const Game: React.FC = () => {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
-      }}
-    >
-      <Snake />
-    </div>
-  );
-};
-
-export function initGame() {
-  const container = document.getElementById("game");
-  if (container) {
-    const root = createRoot(container);
-    root.render(<Game />);
-  } else {
-    console.error("React overlay container not found");
-  }
-}

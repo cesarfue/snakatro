@@ -1,5 +1,5 @@
 import { vertexShaderSource, fragmentShaderSource } from "./shaders/snake";
-import { initGame } from "./game";
+import { initGame } from "./game/game";
 
 // Define the type for the electronAPI
 declare global {

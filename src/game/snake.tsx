@@ -18,9 +18,12 @@ export const Snake: React.FC = () => {
   const initialX = Math.floor(GRID_WIDTH / 2);
   const initialY = Math.floor(GRID_HEIGHT / 2);
 
-  const [segments, setSegments] = useState<Position[]>([
+  const initialSegments = [
     { x: initialX, y: initialY },
-  ]);
+    { x: initialX - 1, y: initialY },
+    { x: initialX - 2, y: initialY },
+  ];
+  const [segments, setSegments] = useState<Position[]>(initialSegments);
   const [direction, setDirection] = useState<Direction>("NONE");
 
   useEffect(() => {
@@ -94,7 +97,11 @@ export const Snake: React.FC = () => {
         if (newHead.y < 0) newHead.y = GRID_HEIGHT - 1;
         if (newHead.y >= GRID_HEIGHT) newHead.y = 0;
 
-        return [newHead];
+        const newSegments = [
+          newHead,
+          ...prevSegments.slice(0, prevSegments.length - 1),
+        ];
+        return newSegments;
       });
     };
 

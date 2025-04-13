@@ -222,23 +222,132 @@ export const Snake: React.FC<GridProps> = ({
     return () => clearInterval(gameInterval);
   }, [gridHeight, gridWidth]);
 
+  const getSegmentStyle = (
+    index: number,
+    segment: Position,
+    segments: Position[],
+  ) => {
+    const isHead = index === 0;
+    const baseStyle: React.CSSProperties = {
+      position: "absolute",
+      width: `${gridSize - 4}px`,
+      height: `${gridSize - 4}px`,
+      backgroundColor: "#3e9676", // Google blue color
+      borderRadius: "8px",
+      left: `${segment.x * gridSize + 2}px`,
+      top: `${segment.y * gridSize + 2}px`,
+      pointerEvents: "auto",
+      userSelect: "none",
+      boxSizing: "border-box",
+      zIndex: isHead ? 2 : 1,
+    };
+
+    return baseStyle;
+  };
+
+  // Eyes for the snake head
+  const Eyes = ({ direction }: { direction: Direction }) => {
+    // Base position for both eyes
+    const eyeSize = gridSize * 0.5;
+    const pupilSize = eyeSize * 0.6;
+
+    // Determine eye positioning based on direction
+    let leftEyeStyle: React.CSSProperties = {
+      position: "absolute",
+      width: `${eyeSize}px`,
+      height: `${eyeSize}px`,
+      backgroundColor: "white",
+      borderRadius: "50%",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    };
+
+    let rightEyeStyle: React.CSSProperties = {
+      ...leftEyeStyle,
+    };
+
+    switch (lastProcessedDirection.current) {
+      case "UP":
+        leftEyeStyle = {
+          ...leftEyeStyle,
+          top: "20%",
+          left: "20%",
+        };
+        rightEyeStyle = {
+          ...rightEyeStyle,
+          top: "20%",
+          right: "20%",
+        };
+        break;
+      case "DOWN":
+        leftEyeStyle = {
+          ...leftEyeStyle,
+          bottom: "20%",
+          left: "20%",
+        };
+        rightEyeStyle = {
+          ...rightEyeStyle,
+          bottom: "20%",
+          right: "20%",
+        };
+        break;
+      case "LEFT":
+        leftEyeStyle = {
+          ...leftEyeStyle,
+          top: "20%",
+          left: "20%",
+        };
+        rightEyeStyle = {
+          ...rightEyeStyle,
+          bottom: "20%",
+          left: "20%",
+        };
+        break;
+      case "RIGHT":
+        leftEyeStyle = {
+          ...leftEyeStyle,
+          top: "20%",
+          right: "20%",
+        };
+        rightEyeStyle = {
+          ...rightEyeStyle,
+          bottom: "20%",
+          right: "20%",
+        };
+        break;
+    }
+
+    // Pupil style
+    const pupilStyle: React.CSSProperties = {
+      width: `${pupilSize}px`,
+      height: `${pupilSize}px`,
+      backgroundColor: "black",
+      borderRadius: "50%",
+    };
+
+    return (
+      <>
+        <div style={leftEyeStyle}>
+          <div style={pupilStyle} />
+        </div>
+        <div style={rightEyeStyle}>
+          <div style={pupilStyle} />
+        </div>
+      </>
+    );
+  };
+
   return (
     <>
+      {/* Snake Segments */}
       {renderSegments.map((segment, index) => (
         <div
           key={index}
-          style={{
-            position: "absolute",
-            width: `${gridSize - 2}px`,
-            height: `${gridSize - 2}px`,
-            backgroundColor:
-              index === 0 ? "rgba(255, 0, 0, 0.7)" : "rgba(255, 0, 0, 0.5)",
-            left: `${segment.x * gridSize}px`,
-            top: `${segment.y * gridSize}px`,
-            pointerEvents: "auto",
-            userSelect: "none",
-          }}
-        />
+          style={getSegmentStyle(index, segment, renderSegments)}
+        >
+          {index === 0 && <Eyes direction={lastProcessedDirection.current} />}
+        </div>
       ))}
     </>
   );

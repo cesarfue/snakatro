@@ -1,8 +1,27 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { Snake } from "./snake";
+import { Food } from "./food";
+
+export type Position = { x: number; y: number };
 
 const Game: React.FC = () => {
+  const gridSize = 30;
+  const gridWidth = Math.floor(window.innerWidth / gridSize);
+  const gridHeight = Math.floor(window.innerHeight / gridSize);
+
+  const [foodPosition, setFoodPosition] = React.useState<Position>({
+    x: Math.floor(Math.random() * gridWidth),
+    y: Math.floor(Math.random() * gridHeight),
+  });
+
+  const resetFoodPosition = () => {
+    setFoodPosition({
+      x: Math.floor(Math.random() * gridWidth),
+      y: Math.floor(Math.random() * gridHeight),
+    });
+  };
+
   return (
     <div
       style={{
@@ -14,7 +33,14 @@ const Game: React.FC = () => {
         pointerEvents: "none",
       }}
     >
-      <Snake />
+      <Snake
+        gridSize={gridSize}
+        gridWidth={gridWidth}
+        gridHeight={gridHeight}
+        foodPosition={foodPosition}
+        resetFoodPosition={resetFoodPosition}
+      />
+      <Food gridSize={gridSize} foodPosition={foodPosition} />
     </div>
   );
 };

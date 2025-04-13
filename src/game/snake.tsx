@@ -1,8 +1,16 @@
 import * as React from "react";
 import { useState, useEffect, useRef } from "react";
+import { Position } from "./game";
 
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT" | "NONE";
-type Position = { x: number; y: number };
+
+interface GridProps {
+  gridSize: number;
+  gridWidth: number;
+  gridHeight: number;
+  foodPosition: Position;
+  resetFoodPosition: () => void;
+}
 
 declare global {
   interface Window {
@@ -10,13 +18,16 @@ declare global {
   }
 }
 
-export const Snake: React.FC = () => {
-  const GRID_SIZE = 20;
-  const MOVE_INTERVAL = 150;
-  const GRID_WIDTH = Math.floor(window.innerWidth / GRID_SIZE);
-  const GRID_HEIGHT = Math.floor(window.innerHeight / GRID_SIZE);
-  const initialX = Math.floor(GRID_WIDTH / 2);
-  const initialY = Math.floor(GRID_HEIGHT / 2);
+export const Snake: React.FC<GridProps> = ({
+  gridSize,
+  gridWidth,
+  gridHeight,
+  foodPosition,
+  resetFoodPosition,
+}) => {
+  const MOVE_INTERVAL = 100;
+  const initialX = Math.floor(gridWidth / 2);
+  const initialY = Math.floor(gridHeight / 2);
 
   const initialSegments = [
     { x: initialX, y: initialY },
@@ -31,13 +42,26 @@ export const Snake: React.FC = () => {
   const previousSegments = useRef<Position[]>(initialSegments);
   const lastUpdateTime = useRef<number>(performance.now());
 
+  const deathOfSnake = () => {
+    setSegments(initialSegments);
+    setRenderSegments(initialSegments);
+    setDirection("NONE");
+  };
+
+  // Animating snake movements between grid cells
   useEffect(() => {
     let animationFrameId: number;
-
-    const animate = (time: number) => {
+    const subCellMovementAnimation = (time: number) => {
       const delta = time - lastUpdateTime.current;
-      const t = Math.min(delta / MOVE_INTERVAL, 1); // progress between 0 and 1
-
+      const t = Math.min(delta / MOVE_INTERVAL, 1);
+      if (
+        previousSegments.current[0].x - segments[0].x > 1 ||
+        previousSegments.current[0].y - segments[0].y > 1 ||
+        previousSegments.current[0].x - segments[0].x < -1 ||
+        previousSegments.current[0].y - segments[0].y < -1
+      ) {
+        return; // Skipping sub cell animation on death
+      }
       const interpolated = segments.map((seg, i) => {
         const prev = previousSegments.current[i] || seg;
         return {
@@ -45,21 +69,18 @@ export const Snake: React.FC = () => {
           y: prev.y + (seg.y - prev.y) * t,
         };
       });
-
       setRenderSegments(interpolated);
       window.snakePosition = {
-        x: interpolated[0].x * GRID_SIZE + GRID_SIZE / 2,
-        y: interpolated[0].y * GRID_SIZE + GRID_SIZE / 2,
+        x: interpolated[0].x * gridSize + gridSize / 2,
+        y: interpolated[0].y * gridSize + gridSize / 2,
       };
-      console.log(window.snakePosition);
-
-      animationFrameId = requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(subCellMovementAnimation);
     };
-
-    animationFrameId = requestAnimationFrame(animate);
+    animationFrameId = requestAnimationFrame(subCellMovementAnimation);
     return () => cancelAnimationFrame(animationFrameId);
   }, [segments]);
 
+  // Set snake direction based on input
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       setDirection((direction) => {
@@ -88,15 +109,15 @@ export const Snake: React.FC = () => {
         return direction;
       });
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
+  // Move snake between grid cells based on direction
   useEffect(() => {
-    const moveSnake = () => {
+    const cellMovement = () => {
       setSegments((prevSegments) => {
         previousSegments.current = prevSegments;
         lastUpdateTime.current = performance.now();
@@ -120,15 +141,19 @@ export const Snake: React.FC = () => {
             newHead = { ...head };
             break;
         }
-
+        if (newHead.x === foodPosition.x && newHead.y === foodPosition.y) {
+          resetFoodPosition();
+          return [newHead, ...prevSegments];
+        }
         if (
           newHead.x < 0 ||
-          newHead.x >= GRID_WIDTH ||
+          newHead.x >= gridWidth ||
           newHead.y < 0 ||
-          newHead.y >= GRID_HEIGHT
-        )
+          newHead.y >= gridHeight
+        ) {
+          deathOfSnake(); // Going off limits
           return prevSegments;
-
+        }
         const newSegments = [
           newHead,
           ...prevSegments.slice(0, prevSegments.length - 1),
@@ -136,10 +161,9 @@ export const Snake: React.FC = () => {
         return newSegments;
       });
     };
-
-    const gameInterval = setInterval(moveSnake, MOVE_INTERVAL);
+    const gameInterval = setInterval(cellMovement, MOVE_INTERVAL);
     return () => clearInterval(gameInterval);
-  }, [GRID_HEIGHT, GRID_WIDTH, direction]);
+  }, [gridHeight, gridWidth, direction]);
 
   return (
     <>
@@ -148,15 +172,14 @@ export const Snake: React.FC = () => {
           key={index}
           style={{
             position: "absolute",
-            width: `${GRID_SIZE - 2}px`,
-            height: `${GRID_SIZE - 2}px`,
+            width: `${gridSize - 2}px`,
+            height: `${gridSize - 2}px`,
             backgroundColor:
               index === 0 ? "rgba(255, 0, 0, 0.7)" : "rgba(255, 0, 0, 0.5)",
-            left: `${segment.x * GRID_SIZE}px`,
-            top: `${segment.y * GRID_SIZE}px`,
+            left: `${segment.x * gridSize}px`,
+            top: `${segment.y * gridSize}px`,
             pointerEvents: "auto",
             userSelect: "none",
-            //transition: "top 150ms linear, left 150ms linear",
           }}
         />
       ))}

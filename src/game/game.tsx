@@ -6,7 +6,7 @@ import { Food } from "./food";
 export type Position = { x: number; y: number };
 
 const Game: React.FC = () => {
-  const gridSize = 30;
+  const gridSize = 50;
   const gridWidth = Math.floor(window.innerWidth / gridSize);
   const gridHeight = Math.floor(window.innerHeight / gridSize);
 

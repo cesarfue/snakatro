@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Position } from "./game";
 
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT" | "NONE";
@@ -25,7 +25,7 @@ export const Snake: React.FC<GridProps> = ({
   foodPosition,
   resetFoodPosition,
 }) => {
-  const MOVE_INTERVAL = 100;
+  const MOVE_INTERVAL = 80;
   const initialX = Math.floor(gridWidth / 2);
   const initialY = Math.floor(gridHeight / 2);
 
@@ -35,17 +35,34 @@ export const Snake: React.FC<GridProps> = ({
     { x: initialX - 2, y: initialY },
   ];
   const [segments, setSegments] = useState<Position[]>(initialSegments);
-  const [direction, setDirection] = useState<Direction>("NONE");
   const [renderSegments, setRenderSegments] =
     useState<Position[]>(initialSegments);
 
   const previousSegments = useRef<Position[]>(initialSegments);
   const lastUpdateTime = useRef<number>(performance.now());
+  const currentDirection = useRef<Direction>("RIGHT");
+  const lastProcessedDirection = useRef<Direction>("RIGHT");
+  const foodRef = useRef<Position>(foodPosition);
+  const shouldResetFood = useRef<boolean>(false);
+
+  // Keep the food reference updated
+  useEffect(() => {
+    foodRef.current = foodPosition;
+  }, [foodPosition]);
+
+  // Handle food reset in a separate effect
+  useEffect(() => {
+    if (shouldResetFood.current) {
+      resetFoodPosition();
+      shouldResetFood.current = false;
+    }
+  }, [resetFoodPosition, segments]);
 
   const deathOfSnake = () => {
     setSegments(initialSegments);
     setRenderSegments(initialSegments);
-    setDirection("NONE");
+    currentDirection.current = "RIGHT";
+    lastProcessedDirection.current = "RIGHT";
   };
 
   // Animating snake movements between grid cells
@@ -78,36 +95,35 @@ export const Snake: React.FC<GridProps> = ({
     };
     animationFrameId = requestAnimationFrame(subCellMovementAnimation);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [segments]);
+  }, [segments, gridSize]);
 
   // Set snake direction based on input
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      setDirection((direction) => {
-        switch (event.key) {
-          case "ArrowUp":
-            if (direction !== "DOWN") {
-              return "UP";
-            }
-            break;
-          case "ArrowDown":
-            if (direction !== "UP") {
-              return "DOWN";
-            }
-            break;
-          case "ArrowLeft":
-            if (direction !== "RIGHT") {
-              return "LEFT";
-            }
-            break;
-          case "ArrowRight":
-            if (direction !== "LEFT") {
-              return "RIGHT";
-            }
-            break;
-        }
-        return direction;
-      });
+      const lastDir = lastProcessedDirection.current;
+
+      switch (event.key) {
+        case "ArrowUp":
+          if (lastDir !== "DOWN") {
+            currentDirection.current = "UP";
+          }
+          break;
+        case "ArrowDown":
+          if (lastDir !== "UP") {
+            currentDirection.current = "DOWN";
+          }
+          break;
+        case "ArrowLeft":
+          if (lastDir !== "RIGHT") {
+            currentDirection.current = "LEFT";
+          }
+          break;
+        case "ArrowRight":
+          if (lastDir !== "LEFT") {
+            currentDirection.current = "RIGHT";
+          }
+          break;
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => {
@@ -118,13 +134,16 @@ export const Snake: React.FC<GridProps> = ({
   // Move snake between grid cells based on direction
   useEffect(() => {
     const cellMovement = () => {
+      // Update the last processed direction
+      lastProcessedDirection.current = currentDirection.current;
+
       setSegments((prevSegments) => {
         previousSegments.current = prevSegments;
         lastUpdateTime.current = performance.now();
         const head = prevSegments[0];
         let newHead: Position;
 
-        switch (direction) {
+        switch (currentDirection.current) {
           case "UP":
             newHead = { x: head.x, y: head.y - 1 };
             break;
@@ -141,10 +160,15 @@ export const Snake: React.FC<GridProps> = ({
             newHead = { ...head };
             break;
         }
-        if (newHead.x === foodPosition.x && newHead.y === foodPosition.y) {
-          resetFoodPosition();
-          return [newHead, ...prevSegments];
+
+        if (
+          newHead.x === foodRef.current.x &&
+          newHead.y === foodRef.current.y
+        ) {
+          shouldResetFood.current = true;
+          return [newHead, ...prevSegments]; // Grow the snake
         }
+
         if (
           newHead.x < 0 ||
           newHead.x >= gridWidth ||
@@ -152,8 +176,19 @@ export const Snake: React.FC<GridProps> = ({
           newHead.y >= gridHeight
         ) {
           deathOfSnake(); // Going off limits
-          return prevSegments;
+          return initialSegments;
         }
+
+        if (
+          prevSegments.some(
+            (segment) => segment.x === newHead.x && segment.y === newHead.y,
+          )
+        ) {
+          deathOfSnake(); // Hit itself
+          return initialSegments;
+        }
+
+        // Normal movement (no growth)
         const newSegments = [
           newHead,
           ...prevSegments.slice(0, prevSegments.length - 1),
@@ -161,9 +196,10 @@ export const Snake: React.FC<GridProps> = ({
         return newSegments;
       });
     };
+
     const gameInterval = setInterval(cellMovement, MOVE_INTERVAL);
     return () => clearInterval(gameInterval);
-  }, [gridHeight, gridWidth, direction]);
+  }, [gridHeight, gridWidth]);
 
   return (
     <>

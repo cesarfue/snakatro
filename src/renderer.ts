@@ -86,23 +86,18 @@ function start(video: HTMLVideoElement) {
     console.error("Canvas element not found");
     return;
   }
-
   console.log("Canvas dimensions:", canvas.clientWidth, canvas.clientHeight);
   canvas.width = canvas.clientWidth * window.devicePixelRatio;
   canvas.height = canvas.clientHeight * window.devicePixelRatio;
   console.log("Canvas buffer dimensions:", canvas.width, canvas.height);
-
   const gl = initWebGL(canvas);
   if (!gl) return;
-
   const shaderProgram = initShaderProgram(gl);
   gl.useProgram(shaderProgram);
-
   if (!(shaderProgram instanceof WebGLProgram)) {
     console.error("Shader program is not a valid WebGLProgram");
     return;
   }
-
   const vertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
   if (vertexPosition === -1) {
     console.error("Could not find vertex position attribute");
@@ -110,7 +105,6 @@ function start(video: HTMLVideoElement) {
   }
   gl.enableVertexAttribArray(vertexPosition);
   gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-
   const vertices = new Float32Array([
     -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0,
   ]);
@@ -129,26 +123,14 @@ function start(video: HTMLVideoElement) {
     shaderProgram,
     "iChannel0",
   );
-
   const snakePositionUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "iSnakePosition",
   );
-
-  if (!snakePositionUniformLocation) {
-    console.error("Could not find snake position uniform location");
-  }
-  if (
-    !timeUniformLocation ||
-    !resolutionUniformLocation ||
-    !textureUniformLocation
-  ) {
-    console.error("Could not find one or more uniform locations");
-    console.log("Time uniform location:", timeUniformLocation);
-    console.log("Resolution uniform location:", resolutionUniformLocation);
-    console.log("Texture uniform location:", textureUniformLocation);
-    return;
-  }
+  const rippleTimeUniformLocation = gl.getUniformLocation(
+    shaderProgram,
+    "iRippleTime",
+  );
 
   const texture = gl.createTexture()!;
   gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -156,32 +138,71 @@ function start(video: HTMLVideoElement) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
+  let rippleStartTime = 0;
+  let rippleActive = false;
+
+  function triggerRipple() {
+    console.log("triggerRipple()");
+    rippleStartTime = performance.now() / 1000;
+    rippleActive = true;
+  }
+
+  window.addEventListener("keydown", (event) => {
+    if (
+      event.code === "Space" ||
+      event.code === "ArrowUp" ||
+      event.code === "ArrowDown" ||
+      event.code === "ArrowLeft" ||
+      event.code === "ArrowRight"
+    ) {
+      triggerRipple();
+    }
+  });
+
+  window.snakeEatsFood = function () {
+    triggerRipple();
+  };
+
   function render() {
     if (!gl) return;
     gl.clear(gl.COLOR_BUFFER_BIT);
-
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
 
-    const time = performance.now() / 1000;
-    gl.uniform1f(timeUniformLocation, time);
+    const currentTime = performance.now() / 1000;
+    gl.uniform1f(timeUniformLocation, currentTime);
     gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
     gl.uniform1i(textureUniformLocation, 0);
 
-    if (window.snakePosition && snakePositionUniformLocation) {
+    if (window.snakePosition) {
       gl.uniform2f(
         snakePositionUniformLocation,
         window.snakePosition.x * window.devicePixelRatio,
-        window.snakePosition.y * window.devicePixelRatio, // Flip Y coordinate for WebGL
+        window.snakePosition.y * window.devicePixelRatio,
       );
     }
+
+    let rippleTime = 0;
+    if (rippleActive) {
+      rippleTime = currentTime - rippleStartTime;
+      if (rippleTime > 3.0) {
+        rippleActive = false;
+      }
+    }
+    gl.uniform1f(rippleTimeUniformLocation, rippleTime);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     requestAnimationFrame(render);
   }
 
   console.log("Starting render loop");
   render();
+}
+
+declare global {
+  interface Window {
+    snakeEatsFood?: () => void;
+  }
 }
 
 window.onload = async () => {

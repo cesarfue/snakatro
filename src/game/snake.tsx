@@ -188,6 +188,7 @@ export const Snake: React.FC<GameTools> = ({
           newHead.x === foodRef.current.x &&
           newHead.y === foodRef.current.y
         ) {
+          window.snakeEatsFood();
           shouldResetFood.current = true;
           return [newHead, ...prevSegments]; // Grow the snake
         }

@@ -10,7 +10,7 @@ watching a movie, or any other usecase.
 ## Run from source
 
 ```bash
-git clone https://github.com/yourname/snakatro.git
+git clone https://github.com/cesarfue/snakatro.git
 cd snakatro
 npm install
 npm start

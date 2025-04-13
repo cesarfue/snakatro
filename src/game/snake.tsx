@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Position } from "./game";
 
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT" | "NONE";
@@ -44,6 +44,7 @@ export const Snake: React.FC<GridProps> = ({
   const lastProcessedDirection = useRef<Direction>("RIGHT");
   const foodRef = useRef<Position>(foodPosition);
   const shouldResetFood = useRef<boolean>(false);
+  const isDead = useRef<boolean>(false);
 
   // Keep the food reference updated
   useEffect(() => {
@@ -59,10 +60,29 @@ export const Snake: React.FC<GridProps> = ({
   }, [resetFoodPosition, segments]);
 
   const deathOfSnake = () => {
-    setSegments(initialSegments);
-    setRenderSegments(initialSegments);
-    currentDirection.current = "RIGHT";
-    lastProcessedDirection.current = "RIGHT";
+    isDead.current = true;
+
+    switch (lastProcessedDirection.current) {
+      case "UP":
+        currentDirection.current = "DOWN";
+        break;
+      case "DOWN":
+        currentDirection.current = "UP";
+        break;
+      case "LEFT":
+        currentDirection.current = "RIGHT";
+        break;
+      case "RIGHT":
+        currentDirection.current = "LEFT";
+        break;
+    }
+    setTimeout(() => {
+      setSegments(initialSegments);
+      setRenderSegments(initialSegments);
+      currentDirection.current = "RIGHT";
+      lastProcessedDirection.current = "RIGHT";
+      isDead.current = false;
+    }, 300);
   };
 
   // Animating snake movements between grid cells
@@ -102,6 +122,7 @@ export const Snake: React.FC<GridProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       const lastDir = lastProcessedDirection.current;
 
+      if (isDead.current) return;
       switch (event.key) {
         case "ArrowUp":
           if (lastDir !== "DOWN") {
@@ -135,8 +156,8 @@ export const Snake: React.FC<GridProps> = ({
   useEffect(() => {
     const cellMovement = () => {
       // Update the last processed direction
+      if (isDead.current) return;
       lastProcessedDirection.current = currentDirection.current;
-
       setSegments((prevSegments) => {
         previousSegments.current = prevSegments;
         lastUpdateTime.current = performance.now();

@@ -11,6 +11,7 @@ interface GameTools {
   foodPosition: Position;
   resetFoodPosition: () => void;
   gamePausedRef: React.MutableRefObject<boolean>;
+  togglePause: () => void;
 }
 
 declare global {
@@ -26,6 +27,7 @@ export const Snake: React.FC<GameTools> = ({
   foodPosition,
   resetFoodPosition,
   gamePausedRef,
+  togglePause,
 }) => {
   const MOVE_INTERVAL = 80;
   const initialX = Math.floor(gridWidth / 2);
@@ -48,6 +50,13 @@ export const Snake: React.FC<GameTools> = ({
   const shouldResetFood = useRef<boolean>(false);
   const isDead = useRef<boolean>(false);
 
+  useEffect(() => {
+    window.snakePosition = {
+      x: initialX * gridSize + gridSize / 2,
+      y: initialY * gridSize + gridSize / 2,
+    };
+  }, []);
+
   // Keep the food reference updated
   useEffect(() => {
     foodRef.current = foodPosition;
@@ -63,35 +72,25 @@ export const Snake: React.FC<GameTools> = ({
 
   const deathOfSnake = () => {
     isDead.current = true;
-
-    switch (lastProcessedDirection.current) {
-      case "UP":
-        currentDirection.current = "DOWN";
-        break;
-      case "DOWN":
-        currentDirection.current = "UP";
-        break;
-      case "LEFT":
-        currentDirection.current = "RIGHT";
-        break;
-      case "RIGHT":
-        currentDirection.current = "LEFT";
-        break;
-    }
     setTimeout(() => {
+      window.snakePosition = {
+        x: initialX * gridSize + gridSize / 2,
+        y: initialY * gridSize + gridSize / 2,
+      };
       setSegments(initialSegments);
       setRenderSegments(initialSegments);
       currentDirection.current = "RIGHT";
       lastProcessedDirection.current = "RIGHT";
       isDead.current = false;
+      togglePause();
     }, 300);
   };
 
   // Animating snake movements between grid cells
   useEffect(() => {
     let animationFrameId: number;
+    if (gamePausedRef.current) return;
     const subCellMovementAnimation = (time: number) => {
-      if (gamePausedRef.current) return;
       const delta = time - lastUpdateTime.current;
       const t = Math.min(delta / MOVE_INTERVAL, 1);
       if (

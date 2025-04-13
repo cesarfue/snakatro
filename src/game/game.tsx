@@ -75,6 +75,7 @@ const Game: React.FC = () => {
           foodPosition={foodPosition}
           resetFoodPosition={resetFoodPosition}
           gamePausedRef={gamePausedRef}
+          togglePause={togglePause}
         />
         <Food gridSize={gridSize} foodPosition={foodPosition} />
         {gamePaused && (

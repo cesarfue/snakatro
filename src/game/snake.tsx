@@ -4,12 +4,13 @@ import { Position } from "./game";
 
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT" | "NONE";
 
-interface GridProps {
+interface GameTools {
   gridSize: number;
   gridWidth: number;
   gridHeight: number;
   foodPosition: Position;
   resetFoodPosition: () => void;
+  gamePausedRef: React.MutableRefObject<boolean>;
 }
 
 declare global {
@@ -18,12 +19,13 @@ declare global {
   }
 }
 
-export const Snake: React.FC<GridProps> = ({
+export const Snake: React.FC<GameTools> = ({
   gridSize,
   gridWidth,
   gridHeight,
   foodPosition,
   resetFoodPosition,
+  gamePausedRef,
 }) => {
   const MOVE_INTERVAL = 80;
   const initialX = Math.floor(gridWidth / 2);
@@ -89,6 +91,7 @@ export const Snake: React.FC<GridProps> = ({
   useEffect(() => {
     let animationFrameId: number;
     const subCellMovementAnimation = (time: number) => {
+      if (gamePausedRef.current) return;
       const delta = time - lastUpdateTime.current;
       const t = Math.min(delta / MOVE_INTERVAL, 1);
       if (
@@ -122,7 +125,7 @@ export const Snake: React.FC<GridProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       const lastDir = lastProcessedDirection.current;
 
-      if (isDead.current) return;
+      if (isDead.current || gamePausedRef.current) return;
       switch (event.key) {
         case "ArrowUp":
           if (lastDir !== "DOWN") {
@@ -156,7 +159,7 @@ export const Snake: React.FC<GridProps> = ({
   useEffect(() => {
     const cellMovement = () => {
       // Update the last processed direction
-      if (isDead.current) return;
+      if (isDead.current || gamePausedRef.current) return;
       lastProcessedDirection.current = currentDirection.current;
       setSegments((prevSegments) => {
         previousSegments.current = prevSegments;
@@ -220,7 +223,7 @@ export const Snake: React.FC<GridProps> = ({
 
     const gameInterval = setInterval(cellMovement, MOVE_INTERVAL);
     return () => clearInterval(gameInterval);
-  }, [gridHeight, gridWidth]);
+  }, [gridHeight, gridWidth, gamePausedRef.current]);
 
   const getSegmentStyle = (
     index: number,

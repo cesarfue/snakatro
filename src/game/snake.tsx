@@ -245,13 +245,28 @@ export const Snake: React.FC<GridProps> = ({
     return baseStyle;
   };
 
-  // Eyes for the snake head
   const Eyes = ({ direction }: { direction: Direction }) => {
-    // Base position for both eyes
-    const eyeSize = gridSize * 0.5;
-    const pupilSize = eyeSize * 0.6;
+    const eyeSize = gridSize * 0.6;
+    const pupilSize = eyeSize * 0.5;
+    const pupilOffset = pupilSize * 0.4;
+    const eyeOffset = gridSize * 0.45;
 
-    // Determine eye positioning based on direction
+    const getPupilTransform = (dir: Direction) => {
+      switch (dir) {
+        case "UP":
+          return `translate(0, -${pupilOffset}px)`;
+        case "DOWN":
+          return `translate(0, ${pupilOffset}px)`;
+        case "LEFT":
+          return `translate(-${pupilOffset}px, 0)`;
+        case "RIGHT":
+          return `translate(${pupilOffset}px, 0)`;
+        default:
+          return "translate(0, 0)";
+      }
+    };
+
+    // Eye styles
     let leftEyeStyle: React.CSSProperties = {
       position: "absolute",
       width: `${eyeSize}px`,
@@ -271,69 +286,95 @@ export const Snake: React.FC<GridProps> = ({
       case "UP":
         leftEyeStyle = {
           ...leftEyeStyle,
-          top: "20%",
-          left: "20%",
+          top: "-10%",
+          left: `calc(30% - ${eyeOffset}px)`,
         };
         rightEyeStyle = {
           ...rightEyeStyle,
-          top: "20%",
-          right: "20%",
+          top: "-10%",
+          right: `calc(30% - ${eyeOffset}px)`,
         };
         break;
       case "DOWN":
         leftEyeStyle = {
           ...leftEyeStyle,
-          bottom: "20%",
-          left: "20%",
+          bottom: "-10%",
+          left: `calc(30% - ${eyeOffset}px)`,
         };
         rightEyeStyle = {
           ...rightEyeStyle,
-          bottom: "20%",
-          right: "20%",
+          bottom: "-10%",
+          right: `calc(30% - ${eyeOffset}px)`,
         };
         break;
       case "LEFT":
         leftEyeStyle = {
           ...leftEyeStyle,
-          top: "20%",
-          left: "20%",
+          top: `calc(30% - ${eyeOffset}px)`,
+          left: "-10%",
         };
         rightEyeStyle = {
           ...rightEyeStyle,
-          bottom: "20%",
-          left: "20%",
+          bottom: `calc(30% - ${eyeOffset}px)`,
+          left: "-10%",
         };
         break;
       case "RIGHT":
         leftEyeStyle = {
           ...leftEyeStyle,
-          top: "20%",
-          right: "20%",
+          top: `calc(30% - ${eyeOffset}px)`,
+          right: "-10%",
         };
         rightEyeStyle = {
           ...rightEyeStyle,
-          bottom: "20%",
-          right: "20%",
+          bottom: `calc(30% - ${eyeOffset}px)`,
+          right: "-10%",
         };
         break;
     }
 
-    // Pupil style
     const pupilStyle: React.CSSProperties = {
       width: `${pupilSize}px`,
       height: `${pupilSize}px`,
       backgroundColor: "black",
       borderRadius: "50%",
+      transform: getPupilTransform(lastProcessedDirection.current),
+      transition: "transform 0.1s ease-out",
     };
+
+    const deadEyeCrossStyle: React.CSSProperties = {
+      position: "relative",
+      width: `${pupilSize}px`,
+      height: `${pupilSize}px`,
+    };
+
+    const crossLineStyle: React.CSSProperties = {
+      position: "absolute",
+      width: "100%",
+      height: "4px",
+      backgroundColor: "black",
+      top: "50%",
+      left: "0",
+      transformOrigin: "center",
+    };
+
+    const DeadEye = () => (
+      <div style={deadEyeCrossStyle}>
+        <span style={{ ...crossLineStyle, transform: "rotate(45deg)" }} />
+        <span style={{ ...crossLineStyle, transform: "rotate(-45deg)" }} />
+      </div>
+    );
+
+    const Eye = ({ style }: { style: React.CSSProperties }) => (
+      <div style={style}>
+        {isDead.current ? <DeadEye /> : <div style={pupilStyle} />}
+      </div>
+    );
 
     return (
       <>
-        <div style={leftEyeStyle}>
-          <div style={pupilStyle} />
-        </div>
-        <div style={rightEyeStyle}>
-          <div style={pupilStyle} />
-        </div>
+        <Eye style={leftEyeStyle} />
+        <Eye style={rightEyeStyle} />
       </>
     );
   };
